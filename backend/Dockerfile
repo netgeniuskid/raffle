@@ -14,11 +14,14 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN cd backend && npx prisma generate
-
 # Build the application
 RUN npm run build:backend
+
+# Generate Prisma client after build
+RUN cd backend && npx prisma generate
+
+# Ensure Prisma client is available
+RUN ls -la backend/node_modules/.prisma/client/ || echo "Prisma client not found"
 
 # Remove dev dependencies to reduce image size
 RUN npm prune --production
