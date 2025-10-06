@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: razz_game_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd backend && npm ci
+        cd ../frontend && npm ci
+
+    - name: Setup database
+      run: |
+        cd backend
+        npx prisma generate
+        npx prisma migrate deploy
+      env:
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/razz_game_test"
+
+    - name: Run backend tests
+      run: |
+        cd backend
+        npm test
+      env:
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/razz_game_test"
+        JWT_SECRET: "test-secret"
+
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm test -- --coverage --watchAll=false
+
+    - name: Run linting
+      run: |
+        npm run lint
+
+    - name: Build applications
+      run: |
+        npm run build
+
+
+
+
+
+
+
+

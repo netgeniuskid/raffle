@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Game {
+  id            String      @id @default(uuid())
+  name          String
+  totalCards    Int
+  prizeCount    Int
+  prizeNames    String?     // JSON array of prize names
+  playerSlots   Int
+  status        String      @default("DRAFT") // DRAFT, WAITING, IN_PROGRESS, ENDED, CANCELED
+  prizePositions String?    // Encrypted JSON array of prize positions
+  createdAt     DateTime    @default(now())
+  startedAt     DateTime?
+  endedAt       DateTime?
+  
+  // Relations
+  players       Player[]
+  cards         Card[]
+  picks         Pick[]
+  
+  @@map("games")
+}
+
+model Player {
+  id           String   @id @default(uuid())
+  gameId       String
+  username     String
+  code         String   @unique // Hashed in DB
+  codeUsed     Boolean  @default(false)
+  playerIndex  Int
+  connected    Boolean  @default(false)
+  isWinner     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  picks        Pick[]
+  revealedCards Card[]
+  
+  @@unique([gameId, playerIndex])
+  @@map("players")
+}
+
+model Card {
+  id                String    @id @default(uuid())
+  gameId            String
+  positionIndex     Int       // 0..totalCards-1
+  isPrize           Boolean   @default(false)
+  revealedByPlayerId String?
+  revealedAt        DateTime?
+  
+  // Relations
+  game              Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  revealedByPlayer  Player?   @relation(fields: [revealedByPlayerId], references: [id])
+  
+  @@unique([gameId, positionIndex])
+  @@map("cards")
+}
+
+model Pick {
+  id          String   @id @default(uuid())
+  gameId      String
+  playerId    String
+  cardIndex   Int
+  wasPrize    Boolean
+  timestamp   DateTime @default(now())
+  
+  // Relations
+  game        Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player      Player   @relation(fields: [playerId], references: [id])
+  
+  @@map("picks")
+}

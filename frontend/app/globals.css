@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: system-ui, sans-serif;
+  }
+  body {
+    @apply bg-[#0b0f17] text-zinc-200;
+  }
+}
+
+@layer components {
+  .card-flip {
+    perspective: 1000px;
+  }
+  
+  .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+  
+  .card-flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+  
+  .card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+  
+  .card-back {
+    background-color: #1f2937;
+    color: white;
+  }
+  
+  .card-front {
+    background-color: #f9fafb;
+    color: #1f2937;
+    transform: rotateY(180deg);
+  }
+  
+  .card-prize {
+    background-color: #10b981;
+    color: white;
+  }
+  
+  .card-empty {
+    background-color: #6b7280;
+    color: white;
+  }
+
+  .card-shuffling {
+    animation: cardShuffle 4s ease-in-out;
+    z-index: 10;
+  }
+
+  @keyframes cardShuffle {
+    /* Phase 1: Collect cards to center (0-25%) */
+    0% {
+      transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+    }
+    5% {
+      transform: translateX(0) translateY(-20px) rotate(0deg) scale(1);
+    }
+    10% {
+      transform: translateX(0) translateY(-40px) rotate(0deg) scale(1);
+    }
+    15% {
+      transform: translateX(0) translateY(-60px) rotate(0deg) scale(1);
+    }
+    20% {
+      transform: translateX(0) translateY(-80px) rotate(0deg) scale(1);
+    }
+    25% {
+      transform: translateX(0) translateY(-100px) rotate(0deg) scale(1);
+    }
+    
+    /* Phase 2: Shuffle in center (25-75%) */
+    30% {
+      transform: translateX(-10px) translateY(-100px) rotate(-5deg) scale(1.1);
+    }
+    35% {
+      transform: translateX(15px) translateY(-100px) rotate(8deg) scale(1.1);
+    }
+    40% {
+      transform: translateX(-20px) translateY(-100px) rotate(-12deg) scale(1.1);
+    }
+    45% {
+      transform: translateX(25px) translateY(-100px) rotate(15deg) scale(1.1);
+    }
+    50% {
+      transform: translateX(-15px) translateY(-100px) rotate(-8deg) scale(1.1);
+    }
+    55% {
+      transform: translateX(20px) translateY(-100px) rotate(10deg) scale(1.1);
+    }
+    60% {
+      transform: translateX(-25px) translateY(-100px) rotate(-15deg) scale(1.1);
+    }
+    65% {
+      transform: translateX(10px) translateY(-100px) rotate(5deg) scale(1.1);
+    }
+    70% {
+      transform: translateX(-5px) translateY(-100px) rotate(-3deg) scale(1.1);
+    }
+    75% {
+      transform: translateX(0) translateY(-100px) rotate(0deg) scale(1.1);
+    }
+    
+    /* Phase 3: Deal cards back to positions (75-100%) */
+    80% {
+      transform: translateX(0) translateY(-80px) rotate(0deg) scale(1);
+    }
+    85% {
+      transform: translateX(0) translateY(-60px) rotate(0deg) scale(1);
+    }
+    90% {
+      transform: translateX(0) translateY(-40px) rotate(0deg) scale(1);
+    }
+    95% {
+      transform: translateX(0) translateY(-20px) rotate(0deg) scale(1);
+    }
+    100% {
+      transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+    }
+  }
+
+  /* Add some randomness to each card's shuffle timing */
+  .card-shuffling:nth-child(1) { animation-delay: 0ms; }
+  .card-shuffling:nth-child(2) { animation-delay: 50ms; }
+  .card-shuffling:nth-child(3) { animation-delay: 100ms; }
+  .card-shuffling:nth-child(4) { animation-delay: 150ms; }
+  .card-shuffling:nth-child(5) { animation-delay: 200ms; }
+  .card-shuffling:nth-child(6) { animation-delay: 250ms; }
+  .card-shuffling:nth-child(7) { animation-delay: 300ms; }
+  .card-shuffling:nth-child(8) { animation-delay: 350ms; }
+  .card-shuffling:nth-child(9) { animation-delay: 400ms; }
+  .card-shuffling:nth-child(10) { animation-delay: 450ms; }
+  .card-shuffling:nth-child(11) { animation-delay: 500ms; }
+  .card-shuffling:nth-child(12) { animation-delay: 550ms; }
+  .card-shuffling:nth-child(13) { animation-delay: 600ms; }
+  .card-shuffling:nth-child(14) { animation-delay: 650ms; }
+  .card-shuffling:nth-child(15) { animation-delay: 700ms; }
+  .card-shuffling:nth-child(16) { animation-delay: 750ms; }
+  .card-shuffling:nth-child(17) { animation-delay: 800ms; }
+  .card-shuffling:nth-child(18) { animation-delay: 850ms; }
+  .card-shuffling:nth-child(19) { animation-delay: 900ms; }
+  .card-shuffling:nth-child(20) { animation-delay: 950ms; }
+  .card-shuffling:nth-child(21) { animation-delay: 1000ms; }
+  .card-shuffling:nth-child(22) { animation-delay: 1050ms; }
+  .card-shuffling:nth-child(23) { animation-delay: 1100ms; }
+  .card-shuffling:nth-child(24) { animation-delay: 1150ms; }
+  .card-shuffling:nth-child(25) { animation-delay: 1200ms; }
+  .card-shuffling:nth-child(26) { animation-delay: 1250ms; }
+  .card-shuffling:nth-child(27) { animation-delay: 1300ms; }
+  .card-shuffling:nth-child(28) { animation-delay: 1350ms; }
+  .card-shuffling:nth-child(29) { animation-delay: 1400ms; }
+  .card-shuffling:nth-child(30) { animation-delay: 1450ms; }
+  .card-shuffling:nth-child(31) { animation-delay: 1500ms; }
+  .card-shuffling:nth-child(32) { animation-delay: 1550ms; }
+  .card-shuffling:nth-child(33) { animation-delay: 1600ms; }
+  .card-shuffling:nth-child(34) { animation-delay: 1650ms; }
+  .card-shuffling:nth-child(35) { animation-delay: 1700ms; }
+  .card-shuffling:nth-child(36) { animation-delay: 1750ms; }
+  .card-shuffling:nth-child(37) { animation-delay: 1800ms; }
+  .card-shuffling:nth-child(38) { animation-delay: 1850ms; }
+  .card-shuffling:nth-child(39) { animation-delay: 1900ms; }
+  .card-shuffling:nth-child(40) { animation-delay: 1950ms; }
+  .card-shuffling:nth-child(41) { animation-delay: 2000ms; }
+  .card-shuffling:nth-child(42) { animation-delay: 2050ms; }
+  .card-shuffling:nth-child(43) { animation-delay: 2100ms; }
+  .card-shuffling:nth-child(44) { animation-delay: 2150ms; }
+  .card-shuffling:nth-child(45) { animation-delay: 2200ms; }
+  .card-shuffling:nth-child(46) { animation-delay: 2250ms; }
+  .card-shuffling:nth-child(47) { animation-delay: 2300ms; }
+  .card-shuffling:nth-child(48) { animation-delay: 2350ms; }
+  .card-shuffling:nth-child(49) { animation-delay: 2400ms; }
+  .card-shuffling:nth-child(50) { animation-delay: 2450ms; }
+}
+
+
+
