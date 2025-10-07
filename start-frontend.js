@@ -23,32 +23,21 @@ install.on('close', (code) => {
   
   console.log('✅ Dependencies installed');
   
-  // Build the frontend with minimal memory usage
-  console.log('🔧 Building frontend with minimal memory...');
-  const build = spawn('npm', ['run', 'build:minimal'], { 
+  // Skip build and run in development mode to avoid memory issues
+  console.log('🚀 Starting frontend in development mode (no build required)...');
+  const build = spawn('npm', ['run', 'dev'], { 
     stdio: 'inherit',
     env: { 
       ...process.env, 
       NODE_OPTIONS: '--max-old-space-size=256', // Limit memory usage to 256MB
-      SKIP_ENV_VALIDATION: 'true'
+      PORT: process.env.PORT || '3000'
     }
   });
   
   build.on('close', (code) => {
     if (code !== 0) {
-      console.error('❌ Failed to build frontend');
+      console.error('❌ Failed to start frontend');
       process.exit(1);
     }
-    
-    console.log('✅ Frontend built successfully');
-    
-    // Start the production server
-    console.log('🚀 Starting production server...');
-    const start = spawn('npm', ['run', 'start'], { stdio: 'inherit' });
-    
-    start.on('close', (code) => {
-      console.log(`Frontend server exited with code ${code}`);
-      process.exit(code);
-    });
   });
 });
