@@ -23,13 +23,14 @@ install.on('close', (code) => {
   
   console.log('✅ Dependencies installed');
   
-  // Build the frontend with memory optimization
-  console.log('🔧 Building frontend...');
-  const build = spawn('npm', ['run', 'build'], { 
+  // Build the frontend with minimal memory usage
+  console.log('🔧 Building frontend with minimal memory...');
+  const build = spawn('npm', ['run', 'build:minimal'], { 
     stdio: 'inherit',
     env: { 
       ...process.env, 
-      NODE_OPTIONS: '--max-old-space-size=1024' // Limit memory usage to 1GB
+      NODE_OPTIONS: '--max-old-space-size=256', // Limit memory usage to 256MB
+      SKIP_ENV_VALIDATION: 'true'
     }
   });
   
