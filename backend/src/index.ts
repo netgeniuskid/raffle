@@ -48,6 +48,21 @@ app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/games', gameRouter);
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Razz Card Game API', 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      games: '/api/games',
+      admin: '/api/admin',
+      auth: '/api/auth'
+    }
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
