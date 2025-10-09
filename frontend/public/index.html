@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razz Card Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .mode-selector {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .admin-section, .player-section {
+            display: none;
+            margin-top: 30px;
+        }
+        .admin-section.active, .player-section.active {
+            display: block;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin: 10px;
+            width: 200px;
+        }
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .game-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🃏 Razz Card Game</h1>
+        
+        <div id="mode-selector" class="mode-selector">
+            <button onclick="showAdmin()">Admin Dashboard</button>
+            <button onclick="showPlayer()">Join Game</button>
+        </div>
+
+        <div id="admin-section" class="admin-section">
+            <h2>Admin Dashboard</h2>
+            <div class="game-info">
+                <h3>Create New Game</h3>
+                <input type="text" id="gameName" placeholder="Game Name" />
+                <input type="number" id="maxPlayers" placeholder="Max Players" value="4" min="2" max="8" />
+                <button onclick="createGame()">Create Game</button>
+            </div>
+            
+            <div class="game-info">
+                <h3>Active Games</h3>
+                <div id="activeGames"></div>
+            </div>
+            
+            <button onclick="goBack()">← Back to Menu</button>
+        </div>
+
+        <div id="player-section" class="player-section">
+            <h2>Join Game</h2>
+            <div class="game-info">
+                <input type="text" id="playerName" placeholder="Your Name" />
+                <input type="text" id="gameCode" placeholder="Game Code" />
+                <button onclick="joinGame()">Join Game</button>
+            </div>
+            
+            <div class="game-info">
+                <h3>Game Status</h3>
+                <div id="gameStatus">Enter your name and game code to join</div>
+            </div>
+            
+            <button onclick="goBack()">← Back to Menu</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://razz-backend-production.up.railway.app';
+        
+        function showAdmin() {
+            document.getElementById('mode-selector').style.display = 'none';
+            document.getElementById('admin-section').classList.add('active');
+            loadActiveGames();
+        }
+        
+        function showPlayer() {
+            document.getElementById('mode-selector').style.display = 'none';
+            document.getElementById('player-section').classList.add('active');
+        }
+        
+        function goBack() {
+            document.getElementById('mode-selector').style.display = 'flex';
+            document.getElementById('admin-section').classList.remove('active');
+            document.getElementById('player-section').classList.remove('active');
+        }
+        
+        async function createGame() {
+            const gameName = document.getElementById('gameName').value;
+            const maxPlayers = document.getElementById('maxPlayers').value;
+            
+            if (!gameName) {
+                alert('Please enter a game name');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/games`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: gameName, maxPlayers: parseInt(maxPlayers) })
+                });
+                
+                const game = await response.json();
+                alert(`Game created! Code: ${game.code}`);
+                loadActiveGames();
+            } catch (error) {
+                alert('Failed to create game: ' + error.message);
+            }
+        }
+        
+        async function loadActiveGames() {
+            try {
+                const response = await fetch(`${API_URL}/api/games`);
+                const games = await response.json();
+                
+                const gamesHtml = games.map(game => 
+                    `<div class="status success">
+                        <strong>${game.name}</strong> - Code: ${game.code} - Players: ${game.players.length}/${game.maxPlayers}
+                    </div>`
+                ).join('');
+                
+                document.getElementById('activeGames').innerHTML = gamesHtml || '<div class="status">No active games</div>';
+            } catch (error) {
+                document.getElementById('activeGames').innerHTML = '<div class="status error">Failed to load games</div>';
+            }
+        }
+        
+        async function joinGame() {
+            const playerName = document.getElementById('playerName').value;
+            const gameCode = document.getElementById('gameCode').value;
+            
+            if (!playerName || !gameCode) {
+                alert('Please enter both name and game code');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/games/${gameCode}/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: playerName })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('gameStatus').innerHTML = 
+                        `<div class="status success">Joined game "${result.game.name}" successfully!</div>`;
+                } else {
+                    const error = await response.json();
+                    document.getElementById('gameStatus').innerHTML = 
+                        `<div class="status error">Error: ${error.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('gameStatus').innerHTML = 
+                    `<div class="status error">Failed to join game: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-refresh active games every 5 seconds
+        setInterval(() => {
+            if (document.getElementById('admin-section').classList.contains('active')) {
+                loadActiveGames();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

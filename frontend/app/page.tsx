@@ -5,6 +5,9 @@ import { GameMode } from '@/components/GameMode'
 import { AdminDashboard } from '@/components/AdminDashboard'
 import { PlayerLobby } from '@/components/PlayerLobby'
 
+// Disable static generation to reduce memory usage
+export const dynamic = 'force-dynamic'
+
 export default function Home() {
   const [mode, setMode] = useState<'select' | 'admin' | 'player'>('select')
 

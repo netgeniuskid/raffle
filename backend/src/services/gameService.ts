@@ -123,7 +123,7 @@ export class GameService {
       include: { players: true },
     });
 
-    return games.map(g => ({
+    return games.map((g: any) => ({
       id: g.id,
       name: g.name,
       totalCards: g.totalCards,
@@ -175,7 +175,7 @@ export class GameService {
     playerId: string,
     cardIndex: number
   ): Promise<{ success: boolean; result?: any; error?: string }> {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // Get game with current state
       const game = await tx.game.findUnique({
         where: { id: gameId },
@@ -194,7 +194,7 @@ export class GameService {
       }
 
       // Find current player
-      const currentPlayer = game.players.find(p => p.id === playerId);
+      const currentPlayer = game.players.find((p: any) => p.id === playerId);
       if (!currentPlayer) {
         return { success: false, error: 'Player not found' };
       }
@@ -208,7 +208,7 @@ export class GameService {
       }
 
       // Check if card is already revealed
-      const card = game.cards.find(c => c.positionIndex === cardIndex);
+      const card = game.cards.find((c: any) => c.positionIndex === cardIndex);
       if (!card) {
         return { success: false, error: 'Card not found' };
       }
@@ -318,7 +318,7 @@ export class GameService {
    * Shuffle cards for a game
    */
   static async shuffleCards(gameId: string): Promise<GameState> {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // Get current game state
       const game = await tx.game.findUnique({
         where: { id: gameId },

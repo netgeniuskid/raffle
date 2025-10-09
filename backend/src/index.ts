@@ -48,6 +48,21 @@ app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/games', gameRouter);
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Razz Card Game API', 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      games: '/api/games',
+      admin: '/api/admin',
+      auth: '/api/auth'
+    }
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
@@ -64,9 +79,10 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-server.listen(PORT, () => {
+server.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔧 Build timestamp: ${new Date().toISOString()}`);
 });
 
 export { io };
