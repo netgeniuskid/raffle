@@ -15,7 +15,7 @@ export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
   const [gameCode, setGameCode] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [player, setPlayer] = useState<Player | null>(null)
-  const [game, setGame] = useState<Game | null>(null)
+  const [game, setGame] = useState<GameState | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
