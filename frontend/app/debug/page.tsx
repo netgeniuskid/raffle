@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getFirestore, collection, addDoc, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -47,7 +47,7 @@ export default function FirebaseDebugger() {
         
         // Initialize Firebase
         addLog('Initializing Firebase...')
-        const app = initializeApp(firebaseConfig)
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
         const db = getFirestore(app)
         addLog('Firebase initialized successfully!')
         
