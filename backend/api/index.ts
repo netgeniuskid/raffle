@@ -16,26 +16,39 @@ const app = express();
 // Middleware
 app.use(helmet());
 
-// CORS configuration for Vercel
-const corsOptions = {
-  origin: [
-    process.env.FRONTEND_URL || "http://localhost:3000",
+// Simple CORS configuration for Vercel
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "http://localhost:3000",
     "https://frontend-topaz-two-51.vercel.app",
     "https://frontend-e126ryr8f-vangelis-projects-4e7374cc.vercel.app",
     "https://frontend-515qghz9t-vangelis-projects-4e7374cc.vercel.app",
-    // Allow any Vercel frontend URL
-    /^https:\/\/frontend-.*\.vercel\.app$/
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200
-};
+    "https://frontend-4t3mnnf0l-vangelis-projects-4e7374cc.vercel.app"
+  ];
+  
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin) || origin?.includes('frontend-') && origin?.includes('.vercel.app')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
 
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// Also use cors middleware as backup
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
 // Rate limiting
 const limiter = rateLimit({
