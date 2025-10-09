@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Gamepad2, Settings, Users } from 'lucide-react'
+import { Gamepad2, Settings, Users, Bug } from 'lucide-react'
 import { AdminDashboardFirebase } from '@/components/AdminDashboardFirebase'
 import { PlayerLobbyFirebase } from '@/components/PlayerLobbyFirebase'
+import Link from 'next/link'
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<'menu' | 'admin' | 'player'>('menu')
@@ -55,6 +56,19 @@ export default function Home() {
               <p className="text-sm text-zinc-500">Enter game code to play</p>
             </div>
           </button>
+
+          <Link
+            href="/debug"
+            className="w-full flex items-center space-x-4 p-6 bg-zinc-900/60 backdrop-blur-sm rounded-2xl border border-zinc-800 hover:border-zinc-700 transition-all group"
+          >
+            <div className="flex items-center justify-center w-12 h-12 bg-yellow-500/10 rounded-xl group-hover:bg-yellow-500/20 transition-colors">
+              <Bug className="w-6 h-6 text-yellow-400" />
+            </div>
+            <div className="text-left">
+              <h2 className="text-lg font-semibold text-zinc-100">Debug Firebase</h2>
+              <p className="text-sm text-zinc-500">Test Firebase connection</p>
+            </div>
+          </Link>
         </div>
 
         {/* Features */}
