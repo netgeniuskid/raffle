@@ -55,11 +55,12 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
     const loadGames = async () => {
       try {
         setLoading(true)
-        const gamesList = await gameService.getGames()
-        const gameStates = gamesList.map(convertGameToGameState)
-        setGames(gameStates)
-        if (gameStates.length > 0) {
-          setSelectedGame(gameStates[0])
+        // Load games from localStorage instead of Firebase
+        const savedGames = JSON.parse(localStorage.getItem('games') || '[]')
+        console.log('Loaded games from localStorage:', savedGames)
+        setGames(savedGames)
+        if (savedGames.length > 0) {
+          setSelectedGame(savedGames[0])
         }
       } catch (error: any) {
         console.error('Error loading games:', error)
@@ -76,7 +77,7 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
       setLoading(true)
       console.log('Creating game with data:', data)
       
-      // Create a simple game object first
+      // Create game locally (Firebase disabled due to connection issues)
       const gameId = Math.random().toString(36).substr(2, 9)
       const gameData = {
         id: gameId,
@@ -96,35 +97,31 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
       
       console.log('Game data prepared:', gameData)
       
-      // Try to save to Firebase
-      try {
-        const result = await gameService.createGame({
-          name: data.name,
-          status: 'DRAFT' as const,
-          totalCards: data.totalCards,
-          prizeCount: data.prizeCount,
-          prizeNames: Array.from({ length: data.prizeCount }, (_, i) => `Prize ${i + 1}`),
-          playerSlots: data.playerSlots,
-          adminId: 'admin'
-        })
-        
-        console.log('Firebase create result:', result)
-        const gameState = convertGameToGameState(result.game)
-        setGames(prev => [gameState, ...prev])
-        setPlayerCodes(result.playerCodes)
-        setSelectedGame(gameState)
-        toast.success('Game created successfully!')
-      } catch (firebaseError: any) {
-        console.error('Firebase create failed:', firebaseError)
-        // Fallback: create game locally without Firebase
-        const gameState = convertGameToGameState(gameData as any)
-        setGames(prev => [gameState, ...prev])
-        setPlayerCodes([])
-        setSelectedGame(gameState)
-        toast.success('Game created locally (Firebase unavailable)')
-      }
+      // Generate player codes locally
+      const playerCodes = Array.from({ length: data.playerSlots }, (_, i) => ({
+        username: `Player ${i + 1}`,
+        code: Math.random().toString(36).substr(2, 6).toUpperCase(),
+        gameId: gameId
+      }))
       
+      console.log('Player codes generated:', playerCodes)
+      
+      // Create game state and add to local state
+      const gameState = convertGameToGameState(gameData as any)
+      setGames(prev => [gameState, ...prev])
+      setPlayerCodes(playerCodes)
+      setSelectedGame(gameState)
+      
+      // Save to localStorage for persistence
+      const savedGames = JSON.parse(localStorage.getItem('games') || '[]')
+      savedGames.unshift(gameState)
+      localStorage.setItem('games', JSON.stringify(savedGames))
+      localStorage.setItem('playerCodes', JSON.stringify(playerCodes))
+      
+      console.log('Game created and saved locally')
+      toast.success('Game created successfully!')
       setShowCreateForm(false)
+      
     } catch (error: any) {
       console.error('Error creating game:', error)
       toast.error(error.message || 'Failed to create game')
@@ -136,14 +133,35 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
   const handleStartGame = async (gameId: string) => {
     try {
       setLoading(true)
-      const updatedGame = await gameService.startGame(gameId)
-      if (updatedGame) {
-        setGames(prev => prev.map(g => g.id === gameId ? updatedGame : g))
-        if (selectedGame?.id === gameId) {
-          setSelectedGame(updatedGame)
-        }
-        toast.success('Game started!')
+      // Update game locally instead of using Firebase
+      const game = games.find(g => g.id === gameId)
+      if (!game) {
+        throw new Error('Game not found')
       }
+      
+      const updatedGame = {
+        ...game,
+        status: 'IN_PROGRESS' as const,
+        cards: Array.from({ length: game.totalCards }, (_, i) => ({
+          id: `card-${i}`,
+          positionIndex: i,
+          isRevealed: false,
+          isPrize: i < game.prizeCount,
+          prizeNames: i < game.prizeCount ? [`Prize ${i + 1}`] : []
+        }))
+      }
+      
+      setGames(prev => prev.map(g => g.id === gameId ? updatedGame : g))
+      if (selectedGame?.id === gameId) {
+        setSelectedGame(updatedGame)
+      }
+      
+      // Save to localStorage
+      const savedGames = JSON.parse(localStorage.getItem('games') || '[]')
+      const updatedGames = savedGames.map((g: any) => g.id === gameId ? updatedGame : g)
+      localStorage.setItem('games', JSON.stringify(updatedGames))
+      
+      toast.success('Game started!')
     } catch (error: any) {
       console.error('Error starting game:', error)
       toast.error(error.message || 'Failed to start game')
@@ -155,11 +173,18 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
   const handleCancelGame = async (gameId: string) => {
     try {
       setLoading(true)
-      await gameService.cancelGame(gameId)
-      setGames(prev => prev.map(g => g.id === gameId ? { ...g, status: 'CANCELED' as const } : g))
+      // Update game locally instead of using Firebase
+      const updatedGame = { ...games.find(g => g.id === gameId), status: 'CANCELED' as const }
+      setGames(prev => prev.map(g => g.id === gameId ? updatedGame : g))
       if (selectedGame?.id === gameId) {
-        setSelectedGame(prev => prev ? { ...prev, status: 'CANCELED' as const } : null)
+        setSelectedGame(updatedGame)
       }
+      
+      // Save to localStorage
+      const savedGames = JSON.parse(localStorage.getItem('games') || '[]')
+      const updatedGames = savedGames.map((g: any) => g.id === gameId ? updatedGame : g)
+      localStorage.setItem('games', JSON.stringify(updatedGames))
+      
       toast.success('Game cancelled!')
     } catch (error: any) {
       console.error('Error cancelling game:', error)
@@ -176,11 +201,17 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
 
     try {
       setLoading(true)
-      await gameService.deleteGame(gameId)
+      // Delete game locally instead of using Firebase
       setGames(prev => prev.filter(g => g.id !== gameId))
       if (selectedGame?.id === gameId) {
         setSelectedGame(games.length > 1 ? games.find(g => g.id !== gameId) || null : null)
       }
+      
+      // Save to localStorage
+      const savedGames = JSON.parse(localStorage.getItem('games') || '[]')
+      const updatedGames = savedGames.filter((g: any) => g.id !== gameId)
+      localStorage.setItem('games', JSON.stringify(updatedGames))
+      
       toast.success('Game deleted!')
     } catch (error: any) {
       console.error('Error deleting game:', error)
