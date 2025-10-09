@@ -43,6 +43,7 @@ export interface Player {
   username: string;
   playerIndex: number;
   connected: boolean;
+  isWinner: boolean;
   joinedAt: any;
 }
 
@@ -226,6 +227,7 @@ export const gameService = {
       username: codeData.username,
       playerIndex: game.players.length,
       connected: true,
+      isWinner: false,
       joinedAt: new Date()
     };
 
