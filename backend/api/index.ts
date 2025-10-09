@@ -13,28 +13,17 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(helmet());
+// Middleware - Disable helmet for now to avoid CORS issues
+// app.use(helmet());
 
-// Simple CORS configuration for Vercel
+// Very permissive CORS for Vercel
 app.use((req, res, next) => {
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "https://frontend-topaz-two-51.vercel.app",
-    "https://frontend-e126ryr8f-vangelis-projects-4e7374cc.vercel.app",
-    "https://frontend-515qghz9t-vangelis-projects-4e7374cc.vercel.app",
-    "https://frontend-4t3mnnf0l-vangelis-projects-4e7374cc.vercel.app"
-  ];
-  
-  const origin = req.headers.origin;
-  
-  if (allowedOrigins.includes(origin) || origin?.includes('frontend-') && origin?.includes('.vercel.app')) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
+  // Allow all origins for now
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
   
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -47,7 +36,9 @@ app.use((req, res, next) => {
 // Also use cors middleware as backup
 app.use(cors({
   origin: true,
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
 // Rate limiting
