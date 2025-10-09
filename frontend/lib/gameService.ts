@@ -20,6 +20,7 @@ export interface Game {
   status: 'DRAFT' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   totalCards: number;
   prizeCount: number;
+  prizeNames: string[];
   playerSlots: number;
   createdAt: any;
   cards: Card[];

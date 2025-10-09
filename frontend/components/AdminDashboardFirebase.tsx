@@ -48,6 +48,7 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
         status: 'DRAFT' as const,
         totalCards: data.totalCards,
         prizeCount: data.prizeCount,
+        prizeNames: Array.from({ length: data.prizeCount }, (_, i) => `Prize ${i + 1}`),
         playerSlots: data.playerSlots,
         adminId: 'admin' // In a real app, this would be the authenticated admin's ID
       })
