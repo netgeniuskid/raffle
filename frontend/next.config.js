@@ -14,7 +14,7 @@ const nextConfig = {
   trailingSlash: false,
   // Optimize for Vercel
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled due to build issues
   },
 }
 

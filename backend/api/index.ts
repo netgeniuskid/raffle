@@ -15,10 +15,27 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
-  credentials: true
-}));
+
+// CORS configuration for Vercel
+const corsOptions = {
+  origin: [
+    process.env.FRONTEND_URL || "http://localhost:3000",
+    "https://frontend-topaz-two-51.vercel.app",
+    "https://frontend-e126ryr8f-vangelis-projects-4e7374cc.vercel.app",
+    "https://frontend-515qghz9t-vangelis-projects-4e7374cc.vercel.app",
+    // Allow any Vercel frontend URL
+    /^https:\/\/frontend-.*\.vercel\.app$/
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
