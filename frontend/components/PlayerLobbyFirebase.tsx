@@ -10,7 +10,7 @@ interface PlayerLobbyProps {
   onBack: () => void
 }
 
-export function PlayerLobby({ onBack }: PlayerLobbyProps) {
+export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
   const [gameCode, setGameCode] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [player, setPlayer] = useState<Player | null>(null)
@@ -187,9 +187,9 @@ export function PlayerLobby({ onBack }: PlayerLobbyProps) {
                 <h3 className="text-sm font-medium text-zinc-300 mb-1">How to join:</h3>
                 <ul className="text-xs text-zinc-500 space-y-1">
                   <li>• Get a game code from the game admin</li>
-                  <li>• Enter the code above and click "Join Game"</li>
+                  <li>• Enter the code above and click &quot;Join Game&quot;</li>
                   <li>• Wait for the admin to start the game</li>
-                  <li>• Pick cards when it's your turn!</li>
+                  <li>• Pick cards when it&apos;s your turn!</li>
                 </ul>
               </div>
             </div>

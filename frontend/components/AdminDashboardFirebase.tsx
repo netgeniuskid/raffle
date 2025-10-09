@@ -13,7 +13,7 @@ interface AdminDashboardProps {
   onBack: () => void
 }
 
-export function AdminDashboard({ onBack }: AdminDashboardProps) {
+export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
   const [games, setGames] = useState<Game[]>([])
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [playerCodes, setPlayerCodes] = useState<PlayerCode[]>([])
