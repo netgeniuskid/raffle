@@ -155,7 +155,7 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
     }
   }
 
-  const handleSelectGame = (game: Game) => {
+  const handleSelectGame = (game: GameState) => {
     setSelectedGame(game)
   }
 
