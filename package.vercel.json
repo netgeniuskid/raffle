@@ -1,0 +1,14 @@
+{
+  "name": "razz-card-game-vercel",
+  "version": "1.0.0",
+  "description": "Razz Card Game - Vercel deployment configuration",
+  "scripts": {
+    "deploy:frontend": "cd frontend && vercel --prod",
+    "deploy:backend": "cd backend && vercel --prod",
+    "deploy:all": "./deploy-vercel.sh",
+    "vercel-build": "echo 'Build completed'"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}

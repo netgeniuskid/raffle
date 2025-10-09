@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: "file:./prod.db"
+      JWT_SECRET: "${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}"
+      JWT_EXPIRES_IN: "${JWT_EXPIRES_IN:-30m}"
+      PORT: 3001
+      NODE_ENV: "production"
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+      ADMIN_KEY: "${ADMIN_KEY:-admin123}"
+    volumes:
+      - backend_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL:-http://localhost:3001}"
+      NEXT_PUBLIC_ADMIN_KEY: "${NEXT_PUBLIC_ADMIN_KEY:-admin123}"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  backend_data:

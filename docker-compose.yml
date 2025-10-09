@@ -1,22 +1,6 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: razz_game
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
       context: ./backend
@@ -24,16 +8,15 @@ services:
     ports:
       - "3001:3001"
     environment:
-      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/razz_game?schema=public"
-      JWT_SECRET: "your-super-secret-jwt-key-here"
+      DATABASE_URL: "file:./prod.db"
+      JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
       JWT_EXPIRES_IN: "30m"
       PORT: 3001
       NODE_ENV: "production"
       FRONTEND_URL: "http://localhost:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    # Use built image filesystem (no bind mount) so dist exists
+    volumes:
+      - backend_data:/app/data
+    restart: unless-stopped
 
   frontend:
     build:
@@ -46,9 +29,10 @@ services:
       NEXT_PUBLIC_ADMIN_KEY: "admin123"
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
+  backend_data:
 
 
 
