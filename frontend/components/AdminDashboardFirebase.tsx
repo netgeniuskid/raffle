@@ -174,7 +174,11 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
     try {
       setLoading(true)
       // Update game locally instead of using Firebase
-      const updatedGame = { ...games.find(g => g.id === gameId), status: 'CANCELED' as const }
+      const game = games.find(g => g.id === gameId)
+      if (!game) {
+        throw new Error('Game not found')
+      }
+      const updatedGame = { ...game, status: 'CANCELED' as const }
       setGames(prev => prev.map(g => g.id === gameId ? updatedGame : g))
       if (selectedGame?.id === gameId) {
         setSelectedGame(updatedGame)
