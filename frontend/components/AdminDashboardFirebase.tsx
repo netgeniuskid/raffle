@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Plus, Play, Square, Download, Users, Gamepad2, Trash2 } from 'lucide-react'
 import { gameService, Game, PlayerCode } from '@/lib/gameService'
+import { GameState } from '@/lib/api'
 import { CreateGameForm } from './CreateGameForm'
 import { GameList } from './GameList'
 import { GameBoard } from './GameBoard'
@@ -14,11 +15,40 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
-  const [games, setGames] = useState<Game[]>([])
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null)
+  const [games, setGames] = useState<GameState[]>([])
+  const [selectedGame, setSelectedGame] = useState<GameState | null>(null)
   const [playerCodes, setPlayerCodes] = useState<PlayerCode[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Convert Game to GameState
+  const convertGameToGameState = (game: Game): GameState => ({
+    id: game.id,
+    name: game.name,
+    totalCards: game.totalCards,
+    prizeCount: game.prizeCount,
+    prizeNames: game.prizeNames,
+    playerSlots: game.playerSlots,
+    status: game.status,
+    currentPlayerIndex: game.currentPlayerIndex,
+    players: game.players.map(p => ({
+      id: p.id,
+      username: p.username,
+      playerIndex: p.playerIndex,
+      connected: p.connected,
+      isWinner: p.isWinner
+    })),
+    cards: game.cards.map(c => ({
+      id: c.id,
+      positionIndex: c.positionIndex,
+      isRevealed: c.isRevealed,
+      isPrize: c.isPrize,
+      prizeNames: c.prizeNames
+    })),
+    createdAt: game.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+    startedAt: undefined,
+    endedAt: undefined
+  })
 
   // Load existing games from Firebase on mount
   useEffect(() => {
@@ -26,9 +56,10 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
       try {
         setLoading(true)
         const gamesList = await gameService.getGames()
-        setGames(gamesList)
-        if (gamesList.length > 0) {
-          setSelectedGame(gamesList[0])
+        const gameStates = gamesList.map(convertGameToGameState)
+        setGames(gameStates)
+        if (gameStates.length > 0) {
+          setSelectedGame(gameStates[0])
         }
       } catch (error: any) {
         console.error('Error loading games:', error)
@@ -53,9 +84,10 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
         adminId: 'admin' // In a real app, this would be the authenticated admin's ID
       })
       
-      setGames(prev => [result.game, ...prev])
+      const gameState = convertGameToGameState(result.game)
+      setGames(prev => [gameState, ...prev])
       setPlayerCodes(result.playerCodes)
-      setSelectedGame(result.game)
+      setSelectedGame(gameState)
       setShowCreateForm(false)
       toast.success('Game created successfully!')
     } catch (error: any) {
