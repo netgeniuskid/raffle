@@ -283,14 +283,8 @@ export const gameService = {
 
   // Subscribe to game updates
   subscribeToGame(gameId: string, callback: (game: Game) => void): () => void {
-    const gameRef = doc(db, 'games', gameId);
-    return onSnapshot(gameRef, (doc) => {
-      if (doc.exists()) {
-        callback({
-          id: doc.id,
-          ...doc.data()
-        } as Game);
-      }
-    });
+    // Temporarily disabled real-time listeners due to connection issues
+    // Return a no-op function
+    return () => {};
   }
 };

@@ -33,12 +33,13 @@ export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
         // Subscribe to game updates
         const gameId = JSON.parse(savedGame).id
         if (gameId) {
-          const unsubscribe = gameService.subscribeToGame(gameId, (updatedGame) => {
-            setGame(updatedGame)
-            localStorage.setItem('game', JSON.stringify(updatedGame))
-          })
+          // Real-time listener temporarily disabled due to connection issues
+          // const unsubscribe = gameService.subscribeToGame(gameId, (updatedGame) => {
+          //   setGame(updatedGame)
+          //   localStorage.setItem('game', JSON.stringify(updatedGame))
+          // })
           
-          return () => unsubscribe()
+          return () => {} // No-op cleanup function
         }
       } catch (error) {
         // Clear invalid data
@@ -72,14 +73,14 @@ export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
       
       toast.success(`Welcome ${result.player.username}!`)
       
-      // Subscribe to game updates
-      const unsubscribe = gameService.subscribeToGame(result.game.id!, (updatedGame) => {
-        setGame(updatedGame)
-        localStorage.setItem('game', JSON.stringify(updatedGame))
-      })
+      // Real-time listener temporarily disabled due to connection issues
+      // const unsubscribe = gameService.subscribeToGame(result.game.id!, (updatedGame) => {
+      //   setGame(updatedGame)
+      //   localStorage.setItem('game', JSON.stringify(updatedGame))
+      // })
       
-      // Store unsubscribe function for cleanup
-      ;(window as any).gameUnsubscribe = unsubscribe
+      // Store no-op cleanup function
+      ;(window as any).gameUnsubscribe = () => {}
       
     } catch (error: any) {
       console.error('Login error:', error)
