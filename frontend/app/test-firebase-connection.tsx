@@ -110,7 +110,7 @@ export default function FirebaseConnectionTest() {
               <li>1. If you see errors, check Firestore security rules</li>
               <li>2. Go to Firebase Console → Firestore → Rules</li>
               <li>3. Set rules to allow read/write: if true</li>
-              <li>4. Click "Publish"</li>
+              <li>4. Click &quot;Publish&quot;</li>
             </ul>
           </div>
         </div>
