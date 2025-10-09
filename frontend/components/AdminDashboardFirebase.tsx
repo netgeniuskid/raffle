@@ -59,6 +59,12 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
         const savedGames = JSON.parse(localStorage.getItem('games') || '[]')
         console.log('Loaded games from localStorage:', savedGames)
         setGames(savedGames)
+        
+        // Load player codes from localStorage
+        const savedPlayerCodes = JSON.parse(localStorage.getItem('playerCodes') || '[]')
+        console.log('Loaded player codes from localStorage:', savedPlayerCodes)
+        setPlayerCodes(savedPlayerCodes)
+        
         if (savedGames.length > 0) {
           setSelectedGame(savedGames[0])
         }
@@ -111,6 +117,9 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
       setGames(prev => [gameState, ...prev])
       setPlayerCodes(playerCodes)
       setSelectedGame(gameState)
+      
+      console.log('Game state created:', gameState)
+      console.log('Player codes set in state:', playerCodes)
       
       // Save to localStorage for persistence
       const savedGames = JSON.parse(localStorage.getItem('games') || '[]')
@@ -275,9 +284,13 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
                 <GameBoard game={selectedGame} />
                 
                 {/* Player Codes */}
-                {playerCodes.length > 0 && (
-                  <PlayerCodes codes={playerCodes} />
-                )}
+                {(() => {
+                  const gamePlayerCodes = playerCodes.filter(pc => pc.gameId === selectedGame.id)
+                  console.log('Filtered player codes for selected game:', gamePlayerCodes)
+                  return gamePlayerCodes.length > 0 && (
+                    <PlayerCodes codes={gamePlayerCodes} />
+                  )
+                })()}
               </div>
             ) : (
               <div className="flex items-center justify-center h-96 bg-zinc-900/60 rounded-2xl border border-zinc-800">
