@@ -66,47 +66,58 @@ export interface PlayerCode {
 export const gameService = {
   // Create a new game
   async createGame(gameData: Omit<Game, 'id' | 'createdAt' | 'cards' | 'players' | 'currentPlayerIndex' | 'picks'>): Promise<{ game: Game; playerCodes: PlayerCode[] }> {
-    const gameRef = await addDoc(collection(db, 'games'), {
-      ...gameData,
-      status: 'DRAFT',
-      cards: [],
-      players: [],
-      currentPlayerIndex: 0,
-      picks: [],
-      createdAt: serverTimestamp()
-    });
-
-    // Generate player codes
-    const playerCodes: PlayerCode[] = [];
-    for (let i = 0; i < gameData.playerSlots; i++) {
-      const code = Math.random().toString(36).substr(2, 6).toUpperCase();
-      playerCodes.push({
-        username: `Player ${i + 1}`,
-        code,
-        gameId: gameRef.id
-      });
-      
-      // Store player code in Firestore
-      await addDoc(collection(db, 'playerCodes'), {
-        username: `Player ${i + 1}`,
-        code,
-        gameId: gameRef.id,
+    console.log('Starting createGame with data:', gameData);
+    
+    try {
+      console.log('Creating game document in Firestore...');
+      const gameRef = await addDoc(collection(db, 'games'), {
+        ...gameData,
+        status: 'DRAFT',
+        cards: [],
+        players: [],
+        currentPlayerIndex: 0,
+        picks: [],
         createdAt: serverTimestamp()
       });
+      console.log('Game document created with ID:', gameRef.id);
+
+      // Generate player codes
+      const playerCodes: PlayerCode[] = [];
+      for (let i = 0; i < gameData.playerSlots; i++) {
+        const code = Math.random().toString(36).substr(2, 6).toUpperCase();
+        playerCodes.push({
+          username: `Player ${i + 1}`,
+          code,
+          gameId: gameRef.id
+        });
+        
+        // Store player code in Firestore
+        console.log(`Creating player code ${i + 1}...`);
+        await addDoc(collection(db, 'playerCodes'), {
+          username: `Player ${i + 1}`,
+          code,
+          gameId: gameRef.id,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      const game: Game = {
+        id: gameRef.id,
+        ...gameData,
+        status: 'DRAFT',
+        cards: [],
+        players: [],
+        currentPlayerIndex: 0,
+        picks: [],
+        createdAt: new Date()
+      };
+
+      console.log('Game creation completed successfully');
+      return { game, playerCodes };
+    } catch (error) {
+      console.error('Error in createGame:', error);
+      throw error;
     }
-
-    const game: Game = {
-      id: gameRef.id,
-      ...gameData,
-      status: 'DRAFT',
-      cards: [],
-      players: [],
-      currentPlayerIndex: 0,
-      picks: [],
-      createdAt: new Date()
-    };
-
-    return { game, playerCodes };
   },
 
   // Get all games

@@ -74,22 +74,57 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
   const handleCreateGame = async (data: any) => {
     try {
       setLoading(true)
-      const result = await gameService.createGame({
+      console.log('Creating game with data:', data)
+      
+      // Create a simple game object first
+      const gameId = Math.random().toString(36).substr(2, 9)
+      const gameData = {
+        id: gameId,
         name: data.name,
         status: 'DRAFT' as const,
         totalCards: data.totalCards,
         prizeCount: data.prizeCount,
         prizeNames: Array.from({ length: data.prizeCount }, (_, i) => `Prize ${i + 1}`),
         playerSlots: data.playerSlots,
-        adminId: 'admin' // In a real app, this would be the authenticated admin's ID
-      })
+        cards: [],
+        players: [],
+        currentPlayerIndex: 0,
+        picks: [],
+        adminId: 'admin',
+        createdAt: new Date().toISOString()
+      }
       
-      const gameState = convertGameToGameState(result.game)
-      setGames(prev => [gameState, ...prev])
-      setPlayerCodes(result.playerCodes)
-      setSelectedGame(gameState)
+      console.log('Game data prepared:', gameData)
+      
+      // Try to save to Firebase
+      try {
+        const result = await gameService.createGame({
+          name: data.name,
+          status: 'DRAFT' as const,
+          totalCards: data.totalCards,
+          prizeCount: data.prizeCount,
+          prizeNames: Array.from({ length: data.prizeCount }, (_, i) => `Prize ${i + 1}`),
+          playerSlots: data.playerSlots,
+          adminId: 'admin'
+        })
+        
+        console.log('Firebase create result:', result)
+        const gameState = convertGameToGameState(result.game)
+        setGames(prev => [gameState, ...prev])
+        setPlayerCodes(result.playerCodes)
+        setSelectedGame(gameState)
+        toast.success('Game created successfully!')
+      } catch (firebaseError: any) {
+        console.error('Firebase create failed:', firebaseError)
+        // Fallback: create game locally without Firebase
+        const gameState = convertGameToGameState(gameData as any)
+        setGames(prev => [gameState, ...prev])
+        setPlayerCodes([])
+        setSelectedGame(gameState)
+        toast.success('Game created locally (Firebase unavailable)')
+      }
+      
       setShowCreateForm(false)
-      toast.success('Game created successfully!')
     } catch (error: any) {
       console.error('Error creating game:', error)
       toast.error(error.message || 'Failed to create game')
