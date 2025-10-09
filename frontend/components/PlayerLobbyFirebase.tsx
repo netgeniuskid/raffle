@@ -55,6 +55,9 @@ export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
     try {
       setLoading(true)
       const result = await gameService.joinGame(gameCode.trim())
+      if (!result) {
+        throw new Error('Login failed')
+      }
       
       // Store auth data
       const token = Math.random().toString(36).substr(2, 20) // Simple token for demo
