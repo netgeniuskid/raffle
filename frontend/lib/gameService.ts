@@ -15,7 +15,7 @@ import {
 import { db } from './firebase';
 
 export interface Game {
-  id?: string;
+  id: string;
   name: string;
   status: 'DRAFT' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   totalCards: number;
