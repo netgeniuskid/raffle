@@ -45,6 +45,7 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
       setLoading(true)
       const result = await gameService.createGame({
         name: data.name,
+        status: 'DRAFT' as const,
         totalCards: data.totalCards,
         prizeCount: data.prizeCount,
         playerSlots: data.playerSlots,
