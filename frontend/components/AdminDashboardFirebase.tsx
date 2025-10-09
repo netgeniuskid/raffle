@@ -89,9 +89,9 @@ export function AdminDashboardFirebase({ onBack }: AdminDashboardProps) {
     try {
       setLoading(true)
       await gameService.cancelGame(gameId)
-      setGames(prev => prev.map(g => g.id === gameId ? { ...g, status: 'CANCELLED' as const } : g))
+      setGames(prev => prev.map(g => g.id === gameId ? { ...g, status: 'CANCELED' as const } : g))
       if (selectedGame?.id === gameId) {
-        setSelectedGame(prev => prev ? { ...prev, status: 'CANCELLED' as const } : null)
+        setSelectedGame(prev => prev ? { ...prev, status: 'CANCELED' as const } : null)
       }
       toast.success('Game cancelled!')
     } catch (error: any) {
