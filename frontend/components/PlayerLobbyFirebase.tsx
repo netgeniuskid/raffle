@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Gamepad2, Users, Eye } from 'lucide-react'
 import { gameService, Game, Player } from '@/lib/gameService'
+import { GameState } from '@/lib/api'
 import { GameInterface } from './GameInterface'
 import toast from 'react-hot-toast'
 
@@ -107,7 +108,7 @@ export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
     toast.success('Logged out successfully')
   }
 
-  const handleGameUpdate = (updatedGame: Game) => {
+  const handleGameUpdate = (updatedGame: GameState) => {
     setGame(updatedGame)
     localStorage.setItem('game', JSON.stringify(updatedGame))
   }
