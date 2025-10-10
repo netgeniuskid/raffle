@@ -64,8 +64,16 @@ export interface PlayerCode {
 
 // Game Management Functions
 export const gameService = {
+  // Check if Firebase is initialized
+  isFirebaseReady(): boolean {
+    return typeof window !== 'undefined' && db !== null;
+  },
+
   // Create a new game
   async createGame(gameData: Omit<Game, 'id' | 'createdAt' | 'cards' | 'players' | 'currentPlayerIndex' | 'picks'>): Promise<{ game: Game; playerCodes: PlayerCode[] }> {
+    if (!this.isFirebaseReady()) {
+      throw new Error('Firebase not initialized. Please refresh the page.');
+    }
     console.log('Starting createGame with data:', gameData);
     
     try {
@@ -122,6 +130,9 @@ export const gameService = {
 
   // Get all games
   async getGames(): Promise<Game[]> {
+    if (!this.isFirebaseReady()) {
+      throw new Error('Firebase not initialized. Please refresh the page.');
+    }
     const gamesRef = collection(db, 'games');
     const q = query(gamesRef, orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
@@ -134,6 +145,9 @@ export const gameService = {
 
   // Get a specific game
   async getGame(gameId: string): Promise<Game | null> {
+    if (!this.isFirebaseReady()) {
+      throw new Error('Firebase not initialized. Please refresh the page.');
+    }
     const gameRef = doc(db, 'games', gameId);
     const gameSnap = await getDoc(gameRef);
     
@@ -211,6 +225,9 @@ export const gameService = {
 
   // Join a game with player code
   async joinGame(code: string): Promise<{ player: Player; game: Game } | null> {
+    if (!this.isFirebaseReady()) {
+      throw new Error('Firebase not initialized. Please refresh the page.');
+    }
     try {
       console.log('🔍 Searching for game code:', code);
       
@@ -275,6 +292,9 @@ export const gameService = {
 
   // Pick a card
   async pickCard(gameId: string, playerId: string, cardIndex: number): Promise<{ success: boolean; wasPrize: boolean; prizeNames: string[]; gameEnded?: boolean }> {
+    if (!this.isFirebaseReady()) {
+      throw new Error('Firebase not initialized. Please refresh the page.');
+    }
     const game = await this.getGame(gameId);
     if (!game || game.status !== 'IN_PROGRESS') {
       throw new Error('Game not in progress');
