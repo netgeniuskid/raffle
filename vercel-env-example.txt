@@ -1,0 +1,22 @@
+# Vercel Environment Variables for Firebase
+# Add these to your Vercel project settings under Environment Variables
+
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyCWNRGruxO1VbEQybetPXcLicwlixlrdVU
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=razzwars-319e6.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=razzwars-319e6
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=razzwars-319e6.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=211646977519
+NEXT_PUBLIC_FIREBASE_APP_ID=1:211646977519:web:3589f1d44eb511c032121a
+
+# Optional: API Configuration
+NEXT_PUBLIC_API_URL=https://your-backend-url.vercel.app
+NEXT_PUBLIC_ADMIN_KEY=admin123
+
+# Instructions:
+# 1. Go to your Vercel project dashboard
+# 2. Navigate to Settings > Environment Variables
+# 3. Add each variable above with its corresponding value
+# 4. Make sure to set them for Production, Preview, and Development environments
+# 5. Redeploy your application after adding the variables
+

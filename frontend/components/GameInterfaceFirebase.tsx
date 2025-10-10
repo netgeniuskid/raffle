@@ -5,13 +5,31 @@ import { LogOut, Users, Trophy, Clock } from 'lucide-react'
 import { Card } from './Card'
 import { PickHistory } from './PickHistory'
 import { gameService, Game, Player } from '@/lib/gameService'
+import { GameState } from '@/lib/api'
 import toast from 'react-hot-toast'
+
+// Conversion function
+const convertGameToGameState = (game: Game): GameState => ({
+  id: game.id,
+  name: game.name,
+  status: game.status as any,
+  totalCards: game.totalCards,
+  prizeCount: game.prizeCount,
+  prizeNames: game.prizeNames,
+  playerSlots: game.playerSlots,
+  cards: game.cards || [],
+  players: game.players || [],
+  currentPlayerIndex: game.currentPlayerIndex || 0,
+  createdAt: game.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+  startedAt: undefined,
+  endedAt: undefined
+})
 
 interface GameInterfaceProps {
   player: Player
-  game: Game
+  game: GameState
   onLogout: () => void
-  onGameUpdate: (game: Game) => void
+  onGameUpdate: (game: GameState) => void
 }
 
 export function GameInterface({ player, game, onLogout, onGameUpdate }: GameInterfaceProps) {
@@ -35,19 +53,8 @@ export function GameInterface({ player, game, onLogout, onGameUpdate }: GameInte
     // Update turn status
     setIsMyTurn(game.currentPlayerIndex === player.playerIndex && game.status === 'IN_PROGRESS')
 
-    // Convert picks to pick history format
-    const history = game.picks.map(pick => {
-      const playerName = game.players.find(p => p.id === pick.playerId)?.username || 'Unknown'
-      return {
-        playerName,
-        cardIndex: pick.cardIndex,
-        wasPrize: pick.wasPrize,
-        message: pick.wasPrize ? `Found ${pick.prizeNames.join(', ')}!` : 'No prize',
-        prizeNames: pick.prizeNames,
-        timestamp: new Date(pick.timestamp).toLocaleTimeString()
-      }
-    })
-    setPickHistory(history)
+    // Initialize empty pick history since GameState doesn't have picks
+    setPickHistory([])
 
   }, [game, player])
 
@@ -61,24 +68,55 @@ export function GameInterface({ player, game, onLogout, onGameUpdate }: GameInte
       setPicking(true)
       const result = await gameService.pickCard(game.id!, player.id, cardIndex)
       
-      if (result.success) {
-        const message = result.wasPrize 
-          ? `🎉 You found ${result.prizeNames.join(', ')}!` 
-          : 'No prize this time'
-        
-        toast.success(message, { duration: 3000 })
-        
-        // Add to pick history
-        const newPick = {
-          playerName: player.username,
-          cardIndex,
-          wasPrize: result.wasPrize,
-          message: result.wasPrize ? `Found ${result.prizeNames.join(', ')}!` : 'No prize',
-          prizeNames: result.prizeNames,
-          timestamp: new Date().toLocaleTimeString()
+        if (result.success) {
+          const message = result.wasPrize 
+            ? `🎉 You found ${result.prizeNames.join(', ')}!` 
+            : 'No prize this time'
+          
+          toast.success(message, { duration: 3000 })
+          
+          // Add to pick history
+          const newPick = {
+            playerName: player.username,
+            cardIndex,
+            wasPrize: result.wasPrize,
+            message: result.wasPrize ? `Found ${result.prizeNames.join(', ')}!` : 'No prize',
+            prizeNames: result.prizeNames,
+            timestamp: new Date().toLocaleTimeString()
+          }
+          setPickHistory(prev => [newPick, ...prev])
+          
+          if (result.gameEnded) {
+            // Game ended - show winner message and refresh game state
+            toast.success(`🎉 Game Over! You won!`, { duration: 5000 })
+            setTimeout(async () => {
+              try {
+                const updatedGame = await gameService.getGame(game.id!)
+                if (updatedGame) {
+                  const gameState = convertGameToGameState(updatedGame as any)
+                  onGameUpdate(gameState)
+                }
+              } catch (error) {
+                console.error('Error refreshing game state:', error)
+              }
+            }, 1000)
+          } else {
+            // Continue game - trigger shuffle animation and refresh game state
+            setIsShuffling(true)
+            setTimeout(async () => {
+              try {
+                const updatedGame = await gameService.getGame(game.id!)
+                if (updatedGame) {
+                  const gameState = convertGameToGameState(updatedGame as any)
+                  onGameUpdate(gameState)
+                }
+              } catch (error) {
+                console.error('Error refreshing game state:', error)
+              }
+              setIsShuffling(false)
+            }, 2000) // Longer animation for shuffle effect
+          }
         }
-        setPickHistory(prev => [newPick, ...prev])
-      }
     } catch (error: any) {
       console.error('Error picking card:', error)
       toast.error(error.message || 'Failed to pick card')
@@ -150,6 +188,36 @@ export function GameInterface({ player, game, onLogout, onGameUpdate }: GameInte
         </div>
       </div>
 
+      {/* Debug Info */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        <div className="mb-4 p-4 bg-zinc-800 rounded-lg text-xs text-zinc-400">
+          <div className="flex justify-between items-center mb-2">
+            <div className="font-semibold text-zinc-300">Debug Info</div>
+            <button 
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.reload()
+                }
+              }} 
+              className="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs"
+            >
+              Refresh Page
+            </button>
+          </div>
+          <div>Game Status: {game.status}</div>
+          <div>Cards Count: {game.cards?.length || 0}</div>
+          <div>Players Count: {game.players?.length || 0}</div>
+          <div>Current Player Index: {game.currentPlayerIndex}</div>
+          <div>Is My Turn: {isMyTurn ? 'Yes' : 'No'}</div>
+          <div>Player Index: {player.playerIndex}</div>
+          <div>Current Player Index: {game.currentPlayerIndex}</div>
+          <div>Game Status: {game.status}</div>
+          <div>Card Positions: {game.cards.slice(0, 5).map(c => `${c.positionIndex}(${c.isRevealed ? 'R' : 'U'})`).join(', ')}</div>
+          <div>Unrevealed Positions: {game.cards.filter(c => !c.isRevealed).slice(0, 5).map(c => `${c.positionIndex}(${c.isRevealed ? 'R' : 'U'})`).join(', ')}</div>
+          <div>Last Updated: {new Date().toLocaleTimeString()}</div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {game.status === 'DRAFT' ? (
           <div className="text-center py-16">
@@ -158,6 +226,15 @@ export function GameInterface({ player, game, onLogout, onGameUpdate }: GameInte
             </div>
             <h2 className="text-2xl font-bold text-zinc-100 mb-2">Waiting for Game to Start</h2>
             <p className="text-zinc-500">The admin will start the game soon. Stay tuned!</p>
+          </div>
+        ) : game.status === 'ENDED' ? (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-500/10 rounded-2xl mb-4">
+              <Trophy className="w-8 h-8 text-yellow-400" />
+            </div>
+            <h2 className="text-3xl font-bold text-yellow-400 mb-2">🎉 Game Over! 🎉</h2>
+            <p className="text-zinc-300 text-lg mb-4">Congratulations! A prize was found!</p>
+            <p className="text-zinc-500">The game has ended. Thank you for playing!</p>
           </div>
         ) : game.status === 'IN_PROGRESS' ? (
           <div className="space-y-8">
@@ -190,21 +267,26 @@ export function GameInterface({ player, game, onLogout, onGameUpdate }: GameInte
                   gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                 }}
               >
-                {game.cards.map((card) => (
-                  <div
-                    key={card.id}
-                    onClick={() => handleCardClick(card.positionIndex)}
-                    className={`group cursor-pointer transition-transform ${
-                      isMyTurn && !card.isRevealed && !picking
-                        ? 'hover:scale-[1.03]'
-                        : 'cursor-not-allowed opacity-50'
-                    }`}
-                  >
-                    <div className="rounded-xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.03)] group-hover:shadow-[0_0_0_1px_rgba(99,102,241,0.35),0_20px_40px_-20px_rgba(99,102,241,0.35)] transition-shadow">
-                      <Card card={card} isShuffling={isShuffling} />
+                {Array.from({ length: game.totalCards }, (_, index) => {
+                  const card = game.cards.find(c => c.positionIndex === index);
+                  if (!card) return null;
+                  
+                  return (
+                    <div
+                      key={card.id}
+                      onClick={() => handleCardClick(card.positionIndex)}
+                      className={`group cursor-pointer transition-transform ${
+                        isMyTurn && !card.isRevealed && !picking
+                          ? 'hover:scale-[1.03]'
+                          : 'cursor-not-allowed opacity-50'
+                      }`}
+                    >
+                      <div className="rounded-xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.03)] group-hover:shadow-[0_0_0_1px_rgba(99,102,241,0.35),0_20px_40px_-20px_rgba(99,102,241,0.35)] transition-shadow">
+                        <Card card={card} isShuffling={isShuffling} />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {picking && (

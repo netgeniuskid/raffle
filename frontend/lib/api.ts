@@ -26,7 +26,9 @@ api.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('player')
       localStorage.removeItem('game')
-      window.location.href = '/'
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     }
     return Promise.reject(error)
   }

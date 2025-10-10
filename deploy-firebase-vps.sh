@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# VPS Deployment Script for Razz Card Game
-# This script sets up the application on a VPS with nginx and SSL
+# Firebase VPS Deployment Script for Razz Card Game
+# This script deploys the Firebase version to your VPS
 
 set -e
 
@@ -12,14 +12,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-DOMAIN=""
-API_DOMAIN=""
-ADMIN_EMAIL=""
-ADMIN_KEY=""
-
-echo -e "${BLUE}🚀 Razz Card Game VPS Deployment Script${NC}"
-echo "================================================"
+echo -e "${BLUE}🚀 Razz Card Game Firebase VPS Deployment${NC}"
+echo "=============================================="
 
 # Check if running as root
 if [[ $EUID -eq 0 ]]; then
@@ -47,55 +41,22 @@ if ! command -v docker-compose &> /dev/null; then
     echo -e "${GREEN}✅ Docker Compose installed successfully${NC}"
 fi
 
-# Check if nginx is installed
-if ! command -v nginx &> /dev/null; then
-    echo -e "${YELLOW}📦 Installing nginx...${NC}"
-    sudo apt update
-    sudo apt install nginx -y
-    sudo systemctl enable nginx
-    sudo systemctl start nginx
-    echo -e "${GREEN}✅ nginx installed successfully${NC}"
-fi
-
-# Check if certbot is installed
-if ! command -v certbot &> /dev/null; then
-    echo -e "${YELLOW}📦 Installing certbot...${NC}"
-    sudo apt install certbot python3-certbot-nginx -y
-    echo -e "${GREEN}✅ certbot installed successfully${NC}"
-fi
-
 # Get configuration from user
 echo -e "${BLUE}📋 Configuration Setup${NC}"
 echo "======================="
 
 read -p "Enter your domain name (e.g., razz.yourdomain.com): " DOMAIN
-read -p "Enter your API domain (e.g., api.yourdomain.com) or press Enter for subdomain: " API_DOMAIN
 read -p "Enter your email for SSL certificate: " ADMIN_EMAIL
-
-# Set default API domain if not provided
-if [ -z "$API_DOMAIN" ]; then
-    API_DOMAIN="api.$DOMAIN"
-fi
 
 # Generate secure admin key
 ADMIN_KEY=$(openssl rand -base64 16)
 
-echo -e "${BLUE}🔧 Creating environment files...${NC}"
-
-# Create backend environment file
-cat > backend/.env << EOF
-DATABASE_URL="file:./prod.db"
-JWT_SECRET="$(openssl rand -base64 32)"
-JWT_EXPIRES_IN="30m"
-PORT=3001
-NODE_ENV="production"
-FRONTEND_URL="https://$DOMAIN"
-ADMIN_KEY="$ADMIN_KEY"
-EOF
-
-# Get Firebase configuration
 echo -e "${BLUE}🔥 Firebase Configuration${NC}"
 echo "=========================="
+echo "You can find these values in your Firebase project settings:"
+echo "Project Settings > General > Your apps > Web app config"
+echo ""
+
 read -p "Enter Firebase API Key: " FIREBASE_API_KEY
 read -p "Enter Firebase Auth Domain: " FIREBASE_AUTH_DOMAIN
 read -p "Enter Firebase Project ID: " FIREBASE_PROJECT_ID
@@ -103,9 +64,11 @@ read -p "Enter Firebase Storage Bucket: " FIREBASE_STORAGE_BUCKET
 read -p "Enter Firebase Messaging Sender ID: " FIREBASE_MESSAGING_SENDER_ID
 read -p "Enter Firebase App ID: " FIREBASE_APP_ID
 
+echo -e "${BLUE}🔧 Creating environment files...${NC}"
+
 # Create frontend environment file
 cat > frontend/.env.local << EOF
-NEXT_PUBLIC_API_URL="https://$API_DOMAIN"
+NEXT_PUBLIC_API_URL="https://$DOMAIN"
 NEXT_PUBLIC_ADMIN_KEY="$ADMIN_KEY"
 NEXT_PUBLIC_FIREBASE_API_KEY="$FIREBASE_API_KEY"
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="$FIREBASE_AUTH_DOMAIN"
@@ -129,14 +92,6 @@ sleep 15
 # Check if services are running
 echo -e "${BLUE}🔍 Checking service health...${NC}"
 
-if curl -f http://localhost:3001/health > /dev/null 2>&1; then
-    echo -e "${GREEN}✅ Backend is running${NC}"
-else
-    echo -e "${RED}❌ Backend health check failed${NC}"
-    docker-compose -f docker-compose.prod.yml logs backend
-    exit 1
-fi
-
 if curl -f http://localhost:3000 > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Frontend is running${NC}"
 else
@@ -147,33 +102,25 @@ fi
 
 echo -e "${BLUE}🌐 Configuring nginx...${NC}"
 
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null; then
+    echo -e "${YELLOW}📦 Installing nginx...${NC}"
+    sudo apt update
+    sudo apt install nginx -y
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
+    echo -e "${GREEN}✅ nginx installed successfully${NC}"
+fi
+
 # Create nginx configuration
-sudo tee /etc/nginx/sites-available/razz-game > /dev/null << EOF
-# Frontend (Next.js)
+sudo tee /etc/nginx/sites-available/razz-game << EOF
+# Frontend (Next.js with Firebase)
 server {
     listen 80;
     server_name $DOMAIN;
     
     location / {
         proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
-    }
-}
-
-# Backend API
-server {
-    listen 80;
-    server_name $API_DOMAIN;
-    
-    location / {
-        proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -195,17 +142,24 @@ echo -e "${GREEN}✅ nginx configured successfully${NC}"
 
 echo -e "${BLUE}🔒 Setting up SSL certificate...${NC}"
 
+# Check if certbot is installed
+if ! command -v certbot &> /dev/null; then
+    echo -e "${YELLOW}📦 Installing certbot...${NC}"
+    sudo apt install certbot python3-certbot-nginx -y
+    echo -e "${GREEN}✅ certbot installed successfully${NC}"
+fi
+
 # Get SSL certificate
-sudo certbot --nginx -d $DOMAIN -d $API_DOMAIN --email $ADMIN_EMAIL --agree-tos --non-interactive
+sudo certbot --nginx -d $DOMAIN --email $ADMIN_EMAIL --agree-tos --non-interactive
 
 echo -e "${GREEN}✅ SSL certificate configured${NC}"
 
 echo -e "${BLUE}🛠️ Setting up auto-start service...${NC}"
 
 # Create systemd service
-sudo tee /etc/systemd/system/razz-game.service > /dev/null << EOF
+sudo tee /etc/systemd/system/razz-game.service << EOF
 [Unit]
-Description=Razz Card Game
+Description=Razz Card Game (Firebase)
 Requires=docker.service
 After=docker.service
 
@@ -246,19 +200,12 @@ else
     echo -e "${YELLOW}⚠️  Frontend not yet accessible via HTTPS (may take a few minutes)${NC}"
 fi
 
-if curl -f https://$API_DOMAIN/health > /dev/null 2>&1; then
-    echo -e "${GREEN}✅ Backend API accessible via HTTPS${NC}"
-else
-    echo -e "${YELLOW}⚠️  Backend API not yet accessible via HTTPS (may take a few minutes)${NC}"
-fi
-
 echo ""
-echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
-echo "================================================"
+echo -e "${GREEN}🎉 Firebase VPS Deployment completed successfully!${NC}"
+echo "=============================================="
 echo -e "${BLUE}🌐 Your application is now available at:${NC}"
 echo -e "   Frontend: https://$DOMAIN"
-echo -e "   Backend API: https://$API_DOMAIN"
-echo -e "   Health Check: https://$API_DOMAIN/health"
+echo -e "   Firebase Backend: Connected to Firebase Firestore"
 echo ""
 echo -e "${BLUE}🔑 Admin Configuration:${NC}"
 echo -e "   Admin Key: $ADMIN_KEY"
@@ -276,4 +223,4 @@ echo -e "   2. Test the application thoroughly"
 echo -e "   3. Set up regular backups"
 echo -e "   4. Monitor server resources"
 echo ""
-echo -e "${GREEN}✨ Enjoy your Razz Card Game!${NC}"
+echo -e "${GREEN}✨ Enjoy your Razz Card Game with Firebase!${NC}"

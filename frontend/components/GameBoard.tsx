@@ -71,11 +71,16 @@ export function GameBoard({ game }: GameBoardProps) {
             gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
           }}
         >
-          {cards.map((card) => (
-            <div key={card.id} className="rounded-xl overflow-hidden">
-              <Card card={card} />
-            </div>
-          ))}
+      {Array.from({ length: cards.length }, (_, index) => {
+        const card = cards.find(c => c.positionIndex === index);
+        if (!card) return null;
+        
+        return (
+          <div key={card.id} className="rounded-xl overflow-hidden">
+            <Card card={card} />
+          </div>
+        );
+      })}
         </div>
       </div>
 

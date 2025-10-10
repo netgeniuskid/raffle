@@ -109,12 +109,14 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `game-codes-${selectedGame?.name || 'game'}.csv`
-    a.click()
-    window.URL.revokeObjectURL(url)
+    if (typeof window !== 'undefined') {
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `game-codes-${selectedGame?.name || 'game'}.csv`
+      a.click()
+      window.URL.revokeObjectURL(url)
+    }
   }
 
   const handleDeleteGame = async (gameId: string) => {

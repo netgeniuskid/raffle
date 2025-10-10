@@ -1,15 +1,32 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ArrowLeft, Gamepad2, Users, Eye } from 'lucide-react'
 import { gameService, Game, Player } from '@/lib/gameService'
 import { GameState } from '@/lib/api'
-import { GameInterface } from './GameInterface'
+import { GameInterface } from './GameInterfaceFirebase'
 import toast from 'react-hot-toast'
 
 interface PlayerLobbyProps {
   onBack: () => void
 }
+
+// Simple conversion function
+const convertGameToGameState = (game: Game): GameState => ({
+  id: game.id,
+  name: game.name,
+  status: game.status as any,
+  totalCards: game.totalCards,
+  prizeCount: game.prizeCount,
+  prizeNames: game.prizeNames,
+  playerSlots: game.playerSlots,
+  cards: game.cards || [],
+  players: game.players || [],
+  currentPlayerIndex: game.currentPlayerIndex || 0,
+  createdAt: game.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+  startedAt: undefined,
+  endedAt: undefined
+})
 
 export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
   const [gameCode, setGameCode] = useState('')
@@ -71,6 +88,11 @@ export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
       setGame(result.game)
       setIsLoggedIn(true)
       
+      // Force refresh game state immediately after joining
+      setTimeout(() => {
+        refreshGameState()
+      }, 1000)
+      
       toast.success(`Welcome ${result.player.username}!`)
       
       // Real-time listener temporarily disabled due to connection issues
@@ -113,6 +135,32 @@ export function PlayerLobbyFirebase({ onBack }: PlayerLobbyProps) {
     setGame(updatedGame)
     localStorage.setItem('game', JSON.stringify(updatedGame))
   }
+
+  // Refresh game state from Firebase
+  const refreshGameState = useCallback(async () => {
+    if (!game) return
+    
+    try {
+      console.log('🔄 Refreshing game state from Firebase...')
+      const updatedGame = await gameService.getGame(game.id)
+      if (updatedGame) {
+        console.log('✅ Game state refreshed:', updatedGame)
+        const gameState = convertGameToGameState(updatedGame as any)
+        setGame(gameState)
+        localStorage.setItem('game', JSON.stringify(gameState))
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing game state:', error)
+    }
+  }, [game])
+
+  // Refresh game state every 2 seconds
+  useEffect(() => {
+    if (!isLoggedIn || !game) return
+    
+    const interval = setInterval(refreshGameState, 2000)
+    return () => clearInterval(interval)
+  }, [isLoggedIn, game, refreshGameState])
 
   if (isLoggedIn && player && game) {
     return (

@@ -1,18 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getFirestore, collection, addDoc, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore'
-
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
-}
+import { collection, addDoc, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 export default function FirebaseDebugger() {
   const [status, setStatus] = useState('Initializing...')
@@ -29,27 +19,8 @@ export default function FirebaseDebugger() {
       try {
         addLog('Starting Firebase debug...')
         
-        // Check environment variables
-        addLog('Checking environment variables...')
-        const envCheck = {
-          apiKey: !!firebaseConfig.apiKey,
-          authDomain: !!firebaseConfig.authDomain,
-          projectId: !!firebaseConfig.projectId,
-          storageBucket: !!firebaseConfig.storageBucket,
-          messagingSenderId: !!firebaseConfig.messagingSenderId,
-          appId: !!firebaseConfig.appId
-        }
-        addLog(`Environment variables: ${JSON.stringify(envCheck)}`)
-        
-        if (!firebaseConfig.apiKey) {
-          throw new Error('Missing Firebase API Key')
-        }
-        
-        // Initialize Firebase
-        addLog('Initializing Firebase...')
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
-        const db = getFirestore(app)
-        addLog('Firebase initialized successfully!')
+        addLog('Using centralized Firebase configuration...')
+        addLog('Firebase already initialized via lib/firebase.ts')
         
         // Test reading from Firestore
         addLog('Testing Firestore read...')
@@ -141,10 +112,10 @@ export default function FirebaseDebugger() {
           <div className="bg-zinc-800 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-zinc-100 mb-4">Environment Variables</h2>
             <div className="space-y-2 text-sm">
-              <p className="text-zinc-400">API Key: {firebaseConfig.apiKey ? '✅ Set' : '❌ Missing'}</p>
-              <p className="text-zinc-400">Project ID: {firebaseConfig.projectId || '❌ Missing'}</p>
-              <p className="text-zinc-400">Auth Domain: {firebaseConfig.authDomain || '❌ Missing'}</p>
-              <p className="text-zinc-400">Storage Bucket: {firebaseConfig.storageBucket || '❌ Missing'}</p>
+              <p className="text-zinc-400">API Key: {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅ Set' : '❌ Missing'}</p>
+              <p className="text-zinc-400">Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '❌ Missing'}</p>
+              <p className="text-zinc-400">Auth Domain: {process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '❌ Missing'}</p>
+              <p className="text-zinc-400">Storage Bucket: {process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '❌ Missing'}</p>
             </div>
           </div>
 

@@ -217,21 +217,26 @@ export function GameInterface({ player, game, onLogout, onGameUpdate }: GameInte
               gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
             }}
           >
-            {game.cards.map((card) => (
-              <div
-                key={card.id}
-                onClick={() => handleCardClick(card.positionIndex)}
-                className={`group cursor-pointer transition-transform ${
-                  isMyTurn && !card.isRevealed && !picking
-                    ? 'hover:scale-[1.03]'
-                    : 'cursor-not-allowed opacity-50'
-                }`}
-              >
-                <div className="rounded-xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.03)] group-hover:shadow-[0_0_0_1px_rgba(99,102,241,0.35),0_20px_40px_-20px_rgba(99,102,241,0.35)] transition-shadow">
-                  <Card card={card} isShuffling={isShuffling} />
-                </div>
-              </div>
-            ))}
+      {Array.from({ length: game.totalCards }, (_, index) => {
+        const card = game.cards.find(c => c.positionIndex === index);
+        if (!card) return null;
+        
+        return (
+          <div
+            key={card.id}
+            onClick={() => handleCardClick(card.positionIndex)}
+            className={`group cursor-pointer transition-transform ${
+              isMyTurn && !card.isRevealed && !picking
+                ? 'hover:scale-[1.03]'
+                : 'cursor-not-allowed opacity-50'
+            }`}
+          >
+            <div className="rounded-xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.03)] group-hover:shadow-[0_0_0_1px_rgba(99,102,241,0.35),0_20px_40px_-20px_rgba(99,102,241,0.35)] transition-shadow">
+              <Card card={card} isShuffling={isShuffling} />
+            </div>
+          </div>
+        );
+      })}
           </div>
 
           {picking && (

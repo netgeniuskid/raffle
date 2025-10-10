@@ -2,20 +2,16 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
   },
-  // Vercel optimizations
-  images: {
-    domains: [],
-  },
-  // Enable static exports for better Vercel performance
-  trailingSlash: false,
-  // Optimize for Vercel
-  experimental: {
-    // optimizeCss: true, // Disabled due to build issues
-  },
+  // Disable server-side features for static export
+  distDir: 'out',
 }
 
 module.exports = nextConfig
